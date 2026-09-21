@@ -1,0 +1,191 @@
+# 🛠️ [BW16-Tools](https://github.com/FlyingIceyyds/BW16-Tools)
+基于Ai-Thinker BW16-Kit RTL8720DN 的无线安全测试工具。包含WIFI功能：解除身份认证(Deauth)，信道干扰(Channel Interference)，Deauth/Disassoc帧检测(Detect)，密码钓鱼(Phishing)，认证/关联帧洪水攻击(Dos)，以及BLE功能：蓝牙弹窗攻击，蓝牙信标广播等。仅用于安全性研究和教育目的，请勿滥用。使用Arduino开发。
+
+# 2025-10-22
+此项目已归档，不再计划更新。
+
+由于BW16硬件资源比较有限，我认为不适合继续添加新的功能。另外此项目最初只为自用，并且我没有Arduino相关的开发经验，这导致项目结构混乱不易维护。同时我收到的一些反馈，有一些因设备而异造成的问题，有些设备工作正常，而有些设备会遇到问题，我并没有更好的办法来排查此类问题。如果后续你对此项目有任何疑问可随时与我联系。另外我在规划一个新的功能更全面且结构规范易维护的项目（同类型但与BW16无关），但目前详情还只是未知。
+
+补充：此项目基于[5gwifi-bw16](https://github.com/shiyi226/5gwifi-bw16)，大部分的功能实现依靠[RTL8720dn-WiFi-Packet-Injection](https://github.com/tesa-klebeband/RTL8720dn-WiFi-Packet-Injection)
+
+当前项目包含两个分支：
+
+- [main分支](https://github.com/FlyingIceyyds/BW16-Tools/tree/main)
+    - 仅包含WIFI相关功能
+    - 功能稳定，无资源紧缺造成的严重故障（如内存溢出等）
+
+- [Beta分支](https://github.com/FlyingIceyyds/BW16-Tools/tree/Beta)
+    - 包含蓝牙BLE相关功能（蓝牙弹窗和蓝牙信标广播）
+    - 由于BW16内存资源有限，Beta版BLE功能会造成严重的内存溢出，导致部分设备出现SSID列表显示异常，无法启动，功能异常等，需自行测试
+
+**如果你只需要使用WIFI相关功能，那么请前往[releases](https://github.com/FlyingIceyyds/BW16-Tools/releases)下载最新版本Bin文件进行烧录，或克隆仓库自行编译：**
+
+``` bash
+git clone https://github.com/FlyingIceyyds/BW16-Tools/
+```
+
+**如果你要使用BLE蓝牙相关功能，那么请下载此版本Bin进行烧录：[Beta 1.0](https://github.com/FlyingIceyyds/BW16-Tools/releases/tag/Beta1.0)，或克隆仓库自行编译：**
+
+``` bash
+git clone -b Beta https://github.com/FlyingIceyyds/BW16-Tools/
+```
+
+**注意：Beta版中，一些WIFI相关功能可能无法使用或工作不正常，具体因设备而异。如果不需要使用BLE蓝牙相关功能，请不要使用Beta版本！这似乎是由于内存不足引起的内存溢出，软件层面很难跟进修复。**
+
+**另外如果使用过程中遇到了一些bug，建议尝试不同版本，请尝试更换至3.0，2.1，Beta1.0，选择你认为最实用的版本**
+
+# 📌 使用须知
+本项目旨在合规前提下用于安全性研究和教育目的，请勿滥用。
+
+# 📑 功能介绍
+- 扫描SSID/AP [Scan]
+    - 快速扫描：常规主动+被动扫描
+    - 深度扫描：多种扫描模式，逐个信道扫描
+- 解除认证攻击 [Attack -> Deauth]
+    - 发送解除认证管理帧强制客户端断开连接
+    - WPA3强制启用管理帧保护，所以对WPA3网络无效
+- 信标帧攻击 [Attack -> Beacon]
+    - 随机信标帧攻击：发送大量随机信标帧
+    - 克隆指定AP：克隆指定AP发送的信标帧SSID
+    - 可选择工作频段2.4G/5G
+- 密码钓鱼 [Phishing]
+    - 支持选择Web页面样式
+- 连接/信道干扰 [Channel Interference]
+    - 将目标AP发送的信标帧和探测响应克隆到多个信道
+    - 客户端无法确认真正的AP工作在哪个信道，从而干扰连接
+    - 通信层面干扰，无视WPA/WPA2/WPA3等安全协议
+- 广播黑洞[BBH]
+    - 主要功能：尝试吞噬目标AP生成的信标帧从而使目标WIFI无法被扫描到
+    - 被动技能：实测此功能运行时如果附近有Windows设备正在扫描WIFI，那么有概率导致此设备无线网卡故障，表现为扫描不到WIFI或WIFI开关无法开启，重启设备或重启网卡即可解决
+- AP洪水攻击 [Dos]
+    - 向目标AP发送大量随机Mac地址的开放认证请求和关联请求帧
+    - 实测针对轻量家用路由和随身WIFI效果显著，对于手机热点无效
+- 攻击帧检测 [Detect]
+    - 监听指定信道中的Deauth/Disassoc帧
+    - 支持选择信道组（2.4G/5G/全部/常用）
+    - 智能记录疑似被攻击的接入点
+    - （然而并不智能，它会记录一些无用的内容）
+- 监视器 [Monitor]
+    - 监听指定信道中的有效数据包数量
+    - 生成实时图表统计
+    - 右上角出现“[*]”指示，表示监听到了解除认证/关联帧
+- 快速抓包 [Capture]
+    - 抓取WAP/WPA2握手包，与 Web UI 的 Handshake Capture 功能相同，但操作相对更方便
+- Web UI
+    - 自定义SSID信标帧攻击 [Custom Beacon]
+    - WPA/WPA2握手包抓取 [Handshake Capture]
+
+# 📟 OLED UI
+![UI](./img/ui.png "0.96 OLED UI")
+
+# 🔗 部分代码来源
+- 鸣谢：[@Ghost](https://github.com/Ghost64847) | [@浪木](https://github.com/shiyi226)
+- https://github.com/shiyi226/5gwifi-bw16
+    - 2025-06-11
+- https://github.com/tesa-klebeband/RTL8720dn-WiFi-Packet-Injection
+    - 2025-04-12
+- https://github.com/A3ST1CODE/RTL8720DN-Captive
+    - 2025-04-03
+- https://github.com/Cancro29/RTL8720dn-Handshake-Capture
+    - 2025-04-22
+- https://github.com/wangergou2023/dog
+    - 2024-07-15
+
+# 🧾 许可证
+采用 [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.html) 许可证，使用此项目，请遵守：
+
+- 禁止修改后闭源售卖
+- 禁止应用于闭源项目/产品
+- 售卖衍生产品需保留版权并无条件提供源代码（禁止以本项目固件为卖点高价售卖设备）
+
+# 🧭 使用指南
+
+## 物料
+- Ai-Thinker BW16-Kit (RTL8720DN)
+- 0.96 OLED 屏幕 (SSD 1315 / 1306)
+- 任意按钮 x 4
+- 3.7v 锂电池 & 充电模块 & 电源开关（可选）
+
+## 接线
+
+| 0.96OLED | BW16-Kit |
+| :-----: | :-----: |
+| GND | GND |
+| VCC | 3V3 |
+| SCL | PA25 |
+| SDA | PA26 |
+
+| 按键映射 | BW16-Kit |
+| :-----: | :-----: |
+| BTN_UP (上) | PA27 |
+| BTN_DOWN (下) | PA12 |
+| BTN_OK (确认) | PA13 |
+| BTN_BACK (返回) | PB2 |
+
+按钮一端接BW16-Kit对应端口引脚（PA/PB），另一端接BW16-Kit任意GND引脚
+
+可在 `BW6-Tools.ino` 中修改按键引脚定义：
+``` cpp
+// 按键引脚定义
+#define BTN_DOWN PA12
+#define BTN_UP PA27
+#define BTN_OK PA13
+#define BTN_BACK PB2
+```
+
+## PCB参考
+
+![PCB](./img/PCB.png "BW16 Tools PCB 预览图")
+
+### PCB
+
+- [Gerber ZIP](./PCB/Gerber.zip)
+- [嘉立创EDA JSON](./PCB/PCB-lceda.json)
+    - 使用 [嘉立创EDA](https://lceda.cn/) 编辑
+
+### BOM
+
+- Ai-Thinker BW16-Kit [x1]
+- 0.96 OLED (SSD 1315 / 1306) [x1]
+- 4 * 4 * 1.8 轻触开关 [x4]
+    - 长宽 4 * 4，高度随意
+- SS12D07 G3 (8.8 * 4.5 * 3) 拨片开关 [x1]
+    - 立式直插，长宽 8.8 * 4.5，柄长随意
+- 3.7V 锂电池 502030 [x1]
+    - 厚 5mm ,宽 20mm，长30mm
+- CL4056 3.7V 锂电池充电模块 [x1]
+    - 长16.8mm * 宽12mm
+
+## 使用预编译bin烧录固件
+
+前往 [Releases](https://github.com/FlyingIceyyds/BW16-Tools/releases) 下载编译好的bin文件，使用任意烧录工具烧录固件
+- 烧录前需要按住BW16-Kit上的Burn按键不放，随后按一下RST按键进入下载模式
+
+## 自行编译烧录固件
+
+1.为Arduino IDE安装BW16开发板
+
+![Arduino_IDE_1](./img/Arduino_IDE_1.png "Arduino IDE首选项配置截图")
+
+- 文件 -> 首选项 -> 其他开发板管理器地址
+- https://github.com/ambiot/ambd_arduino/raw/master/Arduino_package/package_realtek.com_amebad_index.json
+
+![Arduino_IDE_2](./img/Arduino_IDE_2.png "Arduino IDE安装BW16开发板示意图")
+
+- 请安装3.17版本！！！
+
+![Arduino_IDE_3](./img/Arduino_IDE_3.png "Arduino IDE选择BW16开发板示意图")
+
+2.导入本地库
+
+- 依次导入本仓库 `libraries` 目录中所有库文件
+
+![Arduino_IDE_4](./img/Arduino_IDE_4.png "Arduino IDE导入库文件示意图")
+
+3.编译项目并上传
+- 打开`/src/BW16-Tools/BW16-Tools.ino`
+- 使用USB连接BW16-Kit
+- 按住BW16-Kit上的Burn按键不放，随后按一下RST按键进入下载模式
+- 编译并上传
+
+![Arduino_IDE_5](./img/Arduino_IDE_5.png "Arduino IDE编译上传示意图")
